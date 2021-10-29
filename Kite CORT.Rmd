@@ -1,0 +1,70 @@
+---
+title: "Kite CORT - Assignment 5"
+author: "M. Richard"
+date: "October 2, 2019"
+output: html_document
+---
+
+Lopez-Jimenez, L., J. Blas, A. Tanferna, S. Cabezas, T. Marchant, F. Hiraldo and F. Sergio. 2016. Ambient temperature, body condition and sibling rivalry explain feather corticosterone levels in developing black kites. Functional Ecology 30:605-613. 
+
+Authors' hypothesis: do feather corticosterone (CORT) levels reflect the energetic demands of black kite nestlings during their development?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = TRUE,
+	message = FALSE,
+	warning = FALSE
+)
+library(MuMIn)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+library(knitr)
+
+kites <- read_csv("KiteCort.csv")
+kites <- select(kites, -'BROOD ORDER')
+
+colnames(kites)[colnames(kites)=="MEAN TEMPERATURE"] <- "Temperature"
+colnames(kites)[colnames(kites)=="AGE        (days)"] <- "Age"
+colnames(kites)[colnames(kites)=="FEATHER CORT (ng/mm)"] <- "CORT"
+colnames(kites)[colnames(kites)=="BODY CONDITION"] <- "Body"
+colnames(kites)[colnames(kites)=="NEST ID"] <- "Nest ID"
+```
+Sex, brood order, and year were categorical variables. 
+Body condition, territory quality, hatch date, age, and ambient temperature are predictor variables. 
+```{r check for co-linearity}
+pairs(kites[,3:5], lower.panel = NULL)
+```
+
+
+
+
+
+There does not appear to be any co-linearity between variables. 
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+kite_global <- lm(CORT ~ Age + Body + Temperature , data = kites)
+options(na.action = "na.fail")
+results<- dredge(kite_global)
+results
+```
+
+The model 8 including age, body condition, and average temperature had the highest AICc value with the highest weight. 
+
+```{r subset to best models}
+subset(results, delta <5)
+
+```
+
+Subsetting the data doesn't help to narrow down the top models because there is only one model that is logical given the delta and weight values.
+
+```{r calculate variable weights}
+importance(results)
+```
+
+Looking at the variable weights confirms model 8 as the best model with all three variables having a highest weight possible, 1. 
+
+This partically confirms the researchers findings in terms of important varaibles. However, they only provided a partial data set excluding the variables territory quality and hatch date.  
+Researchers concluded that CORT increase with decreasing temperature and decreasing body temperature, and CORT levels decreased with age in nestlings with siblings. 

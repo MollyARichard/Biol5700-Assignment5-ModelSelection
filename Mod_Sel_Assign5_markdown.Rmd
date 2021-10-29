@@ -1,0 +1,53 @@
+---
+title: "Model Selection - Assign 5"
+output: html_notebook
+---
+```{r setup}
+library(MuMIn)
+library(ggplot2)
+library(dplyr)
+library(readr)
+library(tidyr)
+```
+
+```{R message=FALSE, warning=FALSE}
+mander <- read_csv("Novarro et al. Salamander Thermal Physiology Data.csv")
+
+
+colnames(mander)[colnames(mander)=="experimental temp"] <- "temp"
+colnames(mander)[colnames(mander)=="svl (mm)"] <- "svl"
+colnames(mander)[colnames(mander)=="tail length (mm)"] <- "tail"
+colnames(mander)[colnames(mander)=="totel length (mm)"] <- "total"
+colnames(mander)[colnames(mander)=="mass (g)"] <- "mass"
+colnames(mander)[colnames(mander)=="corticosterone release rate (pg/g/h)"] <- "CORT"
+
+mander <- drop_na(mander, temp:CORT )
+
+```
+
+```{r}
+#check for co-linearity
+pairs(mander[,8:11], lower.panel = NULL)
+
+```
+
+```{r}
+salamander_global <- lm(CORT ~ temp+tail+svl+mass, data=mander)
+
+results<-dredge(salamander_global)
+results
+```
+
+```{r}
+# grab best supported models
+subset(results, delta <5)
+```
+
+```{r}
+# calculate variable importance weights
+importance(results)
+```
+```{r message=FALSE, warning=FALSE}
+results2<-dredge(salamander_global, subset= !(tail))
+results2
+```
